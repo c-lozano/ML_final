@@ -1,0 +1,17 @@
+---
+title: "Naive Bayes, LDA, and QDA"
+output: html_document
+date: "2025-02-28"
+---
+
+```{r}
+library(tidyverse)
+library(tidymodels)
+library(discrim)
+library(knitr)
+library(haven)
+```
+
+```{r}
+nutr <- read_xpt('Merged_Data.xpt')
+```
