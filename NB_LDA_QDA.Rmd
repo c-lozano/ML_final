@@ -14,4 +14,50 @@ library(haven)
 
 ```{r}
 nutr <- read_xpt('Merged_Data.xpt')
+
+nutrFilt <- list()
+
+nutrNames <- names(nutr)
+
+for (j in 45:52){
+  nutrFilt[[j-44]] <- nutr |> 
+    select(!(45:52), j)
+}
+
+names(nutrFilt) <- names(nutr)[45:52]
+
+nutrFilt$asthma <- nutrFilt$asthma |> 
+  filter(asthma %in% c(1,2))
+
+nutrFilt$hay_fever <- nutrFilt$hay_fever |> 
+  filter(hay_fever %in% c(1,2))
+
+nutrFilt$arthritis <- nutrFilt$arthritis |> 
+  filter(arthritis %in% c(1,2))
+
+nutrFilt$congestive_heart_failure <- nutrFilt$congestive_heart_failure |> 
+  filter(congestive_heart_failure %in% c(1,2))
+
+nutrFilt$coronary_heart_disease <- nutrFilt$coronary_heart_disease |> 
+  filter(coronary_heart_disease %in% c(1,2))
+
+nutrFilt$heart_attack <- nutrFilt$heart_attack |> 
+  filter(heart_attack %in% c(1,2))
+
+nutrFilt$thyroid_problems <- nutrFilt$thyroid_problems |> 
+  filter(thyroid_problems %in% c(1,2))
+
+nutrFilt$cancer <- nutrFilt$cancer |> 
+  filter(cancer %in% c(1,2))
+```
+
+```{r}
+nbSpec <- naive_Bayes() |>
+  set_mode('classification') |>
+  set_engine('naivebayes') |>
+  set_args(usekernel=F)
+
+recipes <- list(
+
+)
 ```
