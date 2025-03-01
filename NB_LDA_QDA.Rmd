@@ -119,3 +119,34 @@ nutrAccuracies |>
   scale_fill_brewer(guide='none',palette = 'Dark2')+
   labs(y='Prediction accuracy (%)',x='Diagnosed with...',title='10-fold cross-validated prediction accuracy by diagnosis outcome')
 ```
+
+```{r}
+ldaSpec <- discrim_linear() |> 
+  set_mode('classification') |>
+  set_engine('MASS')
+
+for (w in 1:length(nutrFilt)){
+  nutrWorks[[w]] <- workflow() |> 
+    add_model(ldaSpec) |> 
+    add_recipe(nutrRecs[[w]])
+  
+  nutrFits[[w]] <- fit_resamples(nutrWorks[[w]],
+                                 nutrFolds[[w]],
+                                 metrics=metric_set(accuracy,roc_auc))
+  
+  nutrAccuracies[[w]] <- collect_metrics(nutrFits[[w]]) |> 
+    dplyr::select(!c(.estimator,.config,n)) |> 
+    mutate(outcome=names(nutrFilt)[w],.before=1)
+  
+}
+
+nutrAccuracies |> 
+  filter(.metric=='accuracy') |> 
+  rowwise() |> 
+  mutate(mean=mean*100,std_err=std_err*100) |> 
+  ggplot(aes(outcome,mean,fill=outcome))+
+  geom_col(position='dodge')+
+  geom_errorbar(aes(ymin = mean-std_err, ymax = mean+std_err), position = "dodge")+
+  scale_fill_brewer(guide='none',palette = 'Dark2')+
+  labs(y='Prediction accuracy (%)',x='Diagnosed with...',title='10-fold cross-validated prediction accuracy by diagnosis outcome')
+```
