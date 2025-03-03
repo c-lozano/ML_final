@@ -79,3 +79,10 @@ Merged_Data <- inner_join(Filtered_Nutrition_Avg_Cleaned, Filtered_Medical_Condi
 head(Merged_Data)
 dim(Merged_Data)
 ```
+```{r}
+library(janitor)
+write_xpt(clean_names(Merged_Data,replace=c(unsaturated='unsat')) # write to XPT (have to remove spaces in names and shorten a couple first)
+          ,path='Merged_Data.xpt')
+```
+
+
