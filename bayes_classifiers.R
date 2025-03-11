@@ -6,6 +6,9 @@ library(discrim)
 library(knitr)
 library(haven)
 
+plotsToWindow <- F # change to T to show plots in RStudio
+plotsToFile <- F # change to T to overwrite the PNGs in ../figures/
+
 
 # Data-wrangling ####
 
@@ -279,7 +282,7 @@ bayesPlot <- accuracies |>
   labs(y='Prediction accuracy (%)',x='Diagnosed with...',title='Diagnosis prediction accuracy of Bayes\' classfiers')+
   theme(axis.text.x=element_text(angle=45, vjust = 1, hjust=1))
 
-# bayesPlot
+if(plotsToWindow) bayesPlot
 
 
 ### ROC(-AUC) plots ####
@@ -323,7 +326,7 @@ bayesROCPlot <- ROCs |>
   scale_color_brewer(palette='Dark2',name="Diagnosed with...")+
   labs(x = 'False positive rate', y='True positive rate', title='Diagnosis prediction ROC curves of Bayes\' classifiers')
 
-# bayesROCPlot
+if(plotsToWindow) bayesROCPlot
 
 
 ldaROCPlot <- ROCs |> 
@@ -335,7 +338,7 @@ ldaROCPlot <- ROCs |>
   scale_color_brewer(palette='Dark2',guide = 'none')+
   labs(x = 'False positive rate', y='True positive rate', title='Diagnosis prediction ROC curves of LDA classifier')
 
-# ldaROCPlot
+if(plotsToWindow) ldaROCPlot
 
 
 bayesROC_AUCPlot <- ROC_AUCs |> 
@@ -349,7 +352,7 @@ bayesROC_AUCPlot <- ROC_AUCs |>
   labs(y='ROC area under the curve',x='Diagnosed with...',title='Areas under the ROC curves for diagnosis predictions of Bayes\' classfiers')+
   theme(axis.text.x=element_text(angle=45, vjust = 1, hjust=1))
 
-# bayesROC_AUCPlot
+if(plotsToWindow) bayesROC_AUCPlot
 
 
 
@@ -389,7 +392,7 @@ bayesPlot_outliers <- accuracies_outliers |>
   labs(y='Prediction accuracy (%)',x='Diagnosed with...',title='Diagnosis prediction accuracy of Bayes\' classfiers – no outliers')+
   theme(axis.text.x=element_text(angle=45, vjust = 1, hjust=1))
 
-# bayesPlot_outliers
+if(plotsToWindow) bayesPlot_outliers
 
 
 ### ROC(-AUC) plots ####
@@ -433,7 +436,7 @@ bayesROCPlot_outliers <- ROCs_outliers |>
   scale_color_brewer(palette='Dark2',name="Diagnosed with...")+
   labs(x = 'False positive rate', y='True positive rate', title='Diagnosis prediction ROC curves of Bayes\' classifiers – no outliers')
 
-# bayesROCPlot_outliers
+if(plotsToWindow) bayesROCPlot_outliers
 
 
 ldaROCPlot_outliers <- ROCs_outliers |> 
@@ -445,7 +448,7 @@ ldaROCPlot_outliers <- ROCs_outliers |>
   scale_color_brewer(palette='Dark2',guide = 'none')+
   labs(x = 'False positive rate', y='True positive rate', title='Diagnosis prediction ROC curves of LDA classifier – no outliers')
 
-# ldaROCPlot_outliers
+if(plotsToWindow) ldaROCPlot_outliers
 
 
 bayesROC_AUCPlot_outliers <- ROC_AUCs_outliers |> 
@@ -459,7 +462,7 @@ bayesROC_AUCPlot_outliers <- ROC_AUCs_outliers |>
   labs(y='ROC area under the curve',x='Diagnosed with...',title='Areas under the ROC curves for diagnosis predictions of Bayes\' classfiers – no outliers')+
   theme(axis.text.x=element_text(angle=45, vjust = 1, hjust=1))
 
-# bayesROC_AUCPlot_outliers
+if(plotsToWindow) bayesROC_AUCPlot_outliers
 
 
 
@@ -468,36 +471,82 @@ bayesROC_AUCPlot_outliers <- ROC_AUCs_outliers |>
 
 # NOTE: UN-COMMENT THE FOLLOWING TO SAVE THE PLOTS TO A NEW FOLDER IN THE WORKING DIRECTORY, WITH PROPER SIZES AND RESOLUTIONS
 
+if (plotsToFile){
+  figs <- c('bayesPlot',
+            'bayesPlot_outliers',
+            'bayesROC_AUCPlot',
+            'bayesROC_AUCPlot_outliers',
+            'bayesROCPlot',
+            'bayesROCPlot_outliers',
+            'ldaROCPlot',
+            'ldaROCPlot_outliers')
+  
+  fignames <- c('bayes classifiers accuracy comparison',
+                'bayes classifiers accuracy comparison - no outliers',
+                'bayes classifiers ROC-AUC comparison',
+                'bayes classifiers ROC-AUC comparison - no outliers',
+                'bayes classifiers ROC curves comparison',
+                'bayes classifiers ROC curves comparison - no outliers',
+                'LDA classifier ROC curves comparison',
+                'LDA classifier ROC curves comparison - no outliers')
+  
+  folderpath <- paste(getwd(),'/figures/', sep='')
+  dir.create(folderpath)
+  
+  widths <- c(rep(2200,4),rep(4400*.75,2), rep(1800,2))
+  heights <- c(rep(1440,4), rep(1440*.75,2),rep(1600,2))
+  ress <- c(rep(250,8))
+  
+  for (i in 1:length(figs)) {
+    fig <- figs[i]
+    png(filename=paste(folderpath, fignames[i], '.png', sep=''), width=widths[i], height=heights[i], res=ress[i])
+    print(get(fig))
+    dev.off()
+  }
+}
 
-# figs <- c('bayesPlot',
-#           'bayesPlot_outliers',
-#           'bayesROC_AUCPlot',
-#           'bayesROC_AUCPlot_outliers',
-#           'bayesROCPlot',
-#           'bayesROCPlot_outliers',
-#           'ldaROCPlot',
-#           'ldaROCPlot_outliers')
-# 
-# fignames <- c('bayes classifiers accuracy comparison',
-#               'bayes classifiers accuracy comparison - no outliers',
-#               'bayes classifiers ROC-AUC comparison',
-#               'bayes classifiers ROC-AUC comparison - no outliers',
-#               'bayes classifiers ROC curves comparison',
-#               'bayes classifiers ROC curves comparison - no outliers',
-#               'LDA classifier ROC curves comparison',
-#               'LDA classifier ROC curves comparison - no outliers')
-# 
-# folderpath <- paste(getwd(),'/figures/', sep='')
-# dir.create(folderpath)
-# 
-# widths <- c(rep(2200,4),rep(4400*.75,2), rep(1800,2))
-# heights <- c(rep(1440,4), rep(1440*.75,2),rep(1600,2))
-# ress <- c(rep(250,8))
-# 
-# for (i in 1:length(figs)) {
-#   fig <- figs[i]
-#   png(filename=paste(folderpath, fignames[i], '.png', sep=''), width=widths[i], height=heights[i], res=ress[i])
-#   print(get(fig))
-#   dev.off()
-# }
+# Panda ####
 
+#                               _,add8ba,
+#                             ,d888888888b,
+#                            d8888888888888b                        _,ad8ba,_
+#                           d888888888888888)                     ,d888888888b,
+#                           I8888888888888888 _________          ,8888888888888b
+#                  __________`Y88888888888888P"""""""""""baaa,__ ,888888888888888,
+#             ,adP"""""""""""9888888888P""^                 ^""Y8888888888888888I
+#          ,a8"^           ,d888P"888P^                           ^"Y8888888888P'
+#        ,a8^            ,d8888'                                     ^Y8888888P'
+#       a88'           ,d8888P'                                        I88P"^
+#     ,d88'           d88888P'                                          "b,
+#    ,d88'           d888888'                                            `b,
+#   ,d88'           d888888I                                              `b,
+#   d88I           ,8888888'            ___                                `b,
+#  ,888'           d8888888          ,d88888b,              ____            `b,
+#  d888           ,8888888I         d88888888b,           ,d8888b,           `b
+# ,8888           I8888888I        d8888888888I          ,88888888b           8,
+# I8888           88888888b       d88888888888'          8888888888b          8I
+# d8886           888888888       Y888888888P'           Y8888888888,        ,8b
+# 88888b          I88888888b      `Y8888888^             `Y888888888I        d88,
+# Y88888b         `888888888b,      `""""^                `Y8888888P'       d888I
+# `888888b         88888888888b,                           `Y8888P^        d88888
+#  Y888888b       ,8888888888888ba,_          _______        `""^        ,d888888
+#  I8888888b,    ,888888888888888888ba,_     d88888888b               ,ad8888888I
+#  `888888888b,  I8888888888888888888888b,    ^"Y888P"^      ____.,ad88888888888I
+#   88888888888b,`888888888888888888888888b,     ""      ad888888888888888888888'
+#   8888888888888698888888888888888888888888b_,ad88ba,_,d88888888888888888888888
+#   88888888888888888888888888888888888888888b,`"""^ d8888888888888888888888888I
+#   8888888888888888888888888888888888888888888baaad888888888888888888888888888'
+#   Y8888888888888888888888888888888888888888888888888888888888888888888888888P
+#   I888888888888888888888888888888888888888888888P^  ^Y8888888888888888888888'
+#   `Y88888888888888888P88888888888888888888888888'     ^88888888888888888888I
+#    `Y8888888888888888 `8888888888888888888888888       8888888888888888888P'
+#     `Y888888888888888  `888888888888888888888888,     ,888888888888888888P'
+#      `Y88888888888888b  `88888888888888888888888I     I888888888888888888'
+#        "Y8888888888888b  `8888888888888888888888I     I88888888888888888'
+#          "Y88888888888P   `888888888888888888888b     d8888888888888888'
+#             ^""""""""^     `Y88888888888888888888,    888888888888888P'
+#                              "8888888888888888888b,   Y888888888888P^
+#                               `Y888888888888888888b   `Y8888888P"^
+#                                 "Y8888888888888888P     `""""^
+#                                   `"YY88888888888P'
+#                                        ^""""""""'
