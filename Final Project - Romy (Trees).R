@@ -12,7 +12,7 @@ df <- read_xpt("Merged_Data.xpt")
 df[45:52] <- lapply(df[45:52], as.factor) # Convert response variables into factors
 
 # Keep only "yes" (1) and "no" (2) and remove "missing" or "don't know" for all responses
-arthritis <- df[1:45] |> filter(arthritis != 9) |> mutate(arthritis = droplevels(arthritis))
+asthma <- df[1:45] |> filter(asthma != 9) |> mutate(asthma = droplevels(asthma))
 hay_fever <- df[c(1:44,46)] |> filter(hay_fever != 9) |> mutate(hay_fever = droplevels(hay_fever))
 arthritis <- df[c(1:44,47)] |> filter(!arthritis %in% c(0,9)) |> mutate(arthritis = droplevels(arthritis))
 congestive <- df[c(1:44,48)] |> filter(!congestive_heart_failure %in% c(0,9)) |> mutate(congestive_heart_failure = droplevels(congestive_heart_failure))
