@@ -4,55 +4,16 @@ library(tidyverse)
 library(tidymodels)
 library(discrim)
 library(knitr)
-library(haven)
 
 plotsToWindow <- F # change to T to show plots in RStudio
-plotsToFile <- F # change to T to overwrite the PNGs in ../figures/
+plotsToFile <- T # change to T to overwrite the PNGs in ../figures/
 
 
 # Data-wrangling ####
 
-nutr <- read_xpt('Merged_Data.xpt')
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
-nutr <- nutr |> 
-  mutate(across(45:52, ~factor(.x, 
-                               levels=c(1,2), 
-                               labels=c('Yes','No'))))
-
-nutrFilt <- list()
-
-nutrNames <- names(nutr)
-
-for (j in 45:52){
-  nutrFilt[[j-44]] <- nutr |> 
-    dplyr::select(!(45:52), j)
-}
-
-names(nutrFilt) <- names(nutr)[45:52]
-
-nutrFilt$asthma <- nutrFilt$asthma |> 
-  filter(asthma %in% c('Yes','No'))
-
-nutrFilt$hay_fever <- nutrFilt$hay_fever |> 
-  filter(hay_fever %in% c('Yes','No'))
-
-nutrFilt$arthritis <- nutrFilt$arthritis |> 
-  filter(arthritis %in% c('Yes','No'))
-
-nutrFilt$congestive_heart_failure <- nutrFilt$congestive_heart_failure |> 
-  filter(congestive_heart_failure %in% c('Yes','No'))
-
-nutrFilt$coronary_heart_disease <- nutrFilt$coronary_heart_disease |> 
-  filter(coronary_heart_disease %in% c('Yes','No'))
-
-nutrFilt$heart_attack <- nutrFilt$heart_attack |> 
-  filter(heart_attack %in% c('Yes','No'))
-
-nutrFilt$thyroid_problems <- nutrFilt$thyroid_problems |> 
-  filter(thyroid_problems %in% c('Yes','No'))
-
-nutrFilt$cancer <- nutrFilt$cancer |> 
-  filter(cancer %in% c('Yes','No'))
+source('DataSplit.R')
 
 
 # Model training ####
@@ -279,7 +240,7 @@ bayesPlot <- accuracies |>
   geom_errorbar(aes(ymin = mean-std_err, ymax = mean+std_err), position = "dodge")+
   scale_fill_brewer(guide='none',palette = 'Dark2')+
   scale_y_continuous(limits=c(0,100))+
-  labs(y='Prediction accuracy (%)',x='Diagnosed with...',title='Diagnosis prediction accuracy of Bayes\' classfiers')+
+  labs(y='Prediction accuracy (%)',x='Diagnosed with...',title='Diagnosis prediction accuracy of Bayes\' classifiers', subtitle='With 10-fold cross-validation')+
   theme(axis.text.x=element_text(angle=45, vjust = 1, hjust=1))
 
 if(plotsToWindow) bayesPlot
@@ -349,7 +310,7 @@ bayesROC_AUCPlot <- ROC_AUCs |>
   scale_y_continuous(limits=c(0,1))+
   geom_errorbar(aes(ymin = mean-std_err, ymax = mean+std_err), position = "dodge")+
   scale_fill_brewer(guide='none',palette = 'Dark2')+
-  labs(y='ROC area under the curve',x='Diagnosed with...',title='Areas under the ROC curves for diagnosis predictions of Bayes\' classfiers')+
+  labs(y='ROC area under the curve',x='Diagnosed with...',title='Areas under the ROC curves for diagnosis predictions of Bayes\' classifiers', subtitle='With 10-fold cross-validation')+
   theme(axis.text.x=element_text(angle=45, vjust = 1, hjust=1))
 
 if(plotsToWindow) bayesROC_AUCPlot
@@ -389,7 +350,7 @@ bayesPlot_outliers <- accuracies_outliers |>
   geom_errorbar(aes(ymin = mean-std_err, ymax = mean+std_err), position = "dodge")+
   scale_fill_brewer(guide='none',palette = 'Dark2')+
   scale_y_continuous(limits=c(0,100))+
-  labs(y='Prediction accuracy (%)',x='Diagnosed with...',title='Diagnosis prediction accuracy of Bayes\' classfiers – no outliers')+
+  labs(y='Prediction accuracy (%)',x='Diagnosed with...',title='Diagnosis prediction accuracy of Bayes\' classifiers – no outliers', subtitle='With 10-fold cross-validation')+
   theme(axis.text.x=element_text(angle=45, vjust = 1, hjust=1))
 
 if(plotsToWindow) bayesPlot_outliers
@@ -459,7 +420,7 @@ bayesROC_AUCPlot_outliers <- ROC_AUCs_outliers |>
   scale_y_continuous(limits=c(0,1))+
   geom_errorbar(aes(ymin = mean-std_err, ymax = mean+std_err), position = "dodge")+
   scale_fill_brewer(guide='none',palette = 'Dark2')+
-  labs(y='ROC area under the curve',x='Diagnosed with...',title='Areas under the ROC curves for diagnosis predictions of Bayes\' classfiers – no outliers')+
+  labs(y='ROC area under the curve',x='Diagnosed with...',title='Areas under the ROC curves for diagnosis predictions of Bayes\' classifiers – no outliers', subtitle='With 10-fold cross-validation')+
   theme(axis.text.x=element_text(angle=45, vjust = 1, hjust=1))
 
 if(plotsToWindow) bayesROC_AUCPlot_outliers
@@ -468,8 +429,6 @@ if(plotsToWindow) bayesROC_AUCPlot_outliers
 
 
 # Writing plots to file ####
-
-# NOTE: UN-COMMENT THE FOLLOWING TO SAVE THE PLOTS TO A NEW FOLDER IN THE WORKING DIRECTORY, WITH PROPER SIZES AND RESOLUTIONS
 
 if (plotsToFile){
   figs <- c('bayesPlot',
@@ -481,16 +440,16 @@ if (plotsToFile){
             'ldaROCPlot',
             'ldaROCPlot_outliers')
   
-  fignames <- c('bayes classifiers accuracy comparison',
-                'bayes classifiers accuracy comparison - no outliers',
-                'bayes classifiers ROC-AUC comparison',
-                'bayes classifiers ROC-AUC comparison - no outliers',
-                'bayes classifiers ROC curves comparison',
-                'bayes classifiers ROC curves comparison - no outliers',
-                'LDA classifier ROC curves comparison',
-                'LDA classifier ROC curves comparison - no outliers')
+  fignames <- c('bayes_classifiers_accuracy_comparison',
+                'bayes_classifiers_accuracy_comparison_no_outliers',
+                'bayes_classifiers_ROC-AUC_comparison',
+                'bayes_classifiers_ROC-AUC_comparison_no_outliers',
+                'bayes_classifiers_ROC_curves_comparison',
+                'bayes_classifiers_ROC_curves_comparison_no_outliers',
+                'LDA_classifier_ROC_curves_comparison',
+                'LDA_classifier_ROC_curves_comparison_no_outliers')
   
-  folderpath <- paste(getwd(),'/figures/', sep='')
+  folderpath <- paste(getwd(),'/figures/bayes/', sep='')
   dir.create(folderpath)
   
   widths <- c(rep(2200,4),rep(4400*.75,2), rep(1800,2))

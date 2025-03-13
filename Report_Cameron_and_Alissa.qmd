@@ -50,13 +50,24 @@ Include your pipeline for cleaning and processing the data below, including remo
 #| file: 'DataSplit.R'
 ```
 
-indicate who did the work: Alissa
+indicate who did the work: Alissa and Cameron
 
 ## Methods
 
 Describe the questions you posed and the methods used to address them. State the assumptions underlying the methods (e.g. explanatory variable is categorical, and predictors are independent) and demonstrate or discuss whether they are satisfied by your data. Provide at least one summary table or visualization of the relevant variables of your data.
 
-### Method 1
+### Bayes classifiers – Cameron
+
+Three Bayes classification methods – naive Bayes, linear discriminant analysis (LDA), and quadratic discriminant analysis (QDA) were used to train a model to predict the diagnosis outcomes ("Yes/Diagnosed" or "No/Not Diagnosed") for each condition (separately) from the set of 43 nutrient predictor variables. Prediction accuracies and receiver operator characterisitic (ROC) curves were extracted from each model trained under 10-fold cross-validation to assess performance.
+
+The code for training these models is reproduced below:
+```{r}
+#| eval: false
+#| file: 'bayes_classifiers.R'
+#| echo: !expr 1:206
+```
+
+### Trees and random forest – Romy
 
 indicate who did the work
 
@@ -64,19 +75,10 @@ indicate who did the work
 
 ```
 
-### Methods 2
-
-indicate who did the work
-
-```{r}
-
-```
-
-### Methods 3
+### Neural network – Alissa
 
 I ran my code in python, since I have worked with their Neural Network packages before and I felt more comfortable using those. However, I can't find a way to run the code properly in RStudio, so I think if you wanted to run this code, you might need to run it on a python interpreter instead. Either way, I included the plots I got in my results section.
 
-Alissa
 
 ```{python}
 #| eval: false
@@ -258,9 +260,36 @@ for i, response_name in enumerate(response_variable_names):
 
 ## Results
 
-Produce figures or tables using the methods above to answer the questions you posed. For example, for a predictive model, provide cross-validation metrics and a plot of the predictions vs true values.
+### Bayes classifiers – Cameron
 
-### Results 1
+While the naive Bayes and QDA models predicted most of the outcome diagnoses with poor mean cross-validated accuracies (with the only models producing accuracies over 75% being the naive Bayes models for predicting asthma, congestive heart failure, and heart attack diagnoses), the LDA classification models predicted with consistently greater accuracy: all diagnosis outcomes except for arthritis were predicted with mean accuracies over 75% (@fig-accuracies). Initially, we considered this to suggest the LDA models were performing somewhat well.
+
+![Mean 10-fold cross-validated accuracies for predicting each of the 8 diagnosis outcomes from the 43 nutrient intake predictors, separated by method of Bayes classification (naive Bayes, LDA, or QDA).](figures/bayes/bayes_classifiers_accuracy_comparison.png){#fig-accuracies}
+Unfortunately, further investigation revealed that all of the models, including the LDAs, were in fact performing only slightly better than would a random classifier predicting solely on the basis of outcome value distribution (i.e., a classifier which, for a diagnosis outcome consisting of 95% "No/Not Diagnosed" values and only 5% "Yes/Diagnosed" values, simply classifies a random 95% of the observations as "No" without regard to predictor values). The expected receiver operator characteristic (ROC) curve for such a random classifier would be linear with a y-intercept of 0 and a slope of 1, and the ROC curves for our models are only marginally different from this (@fig-ROCs; with separated ROCs for the LDA models given in @fig-ROCs-LDA). The areas under the ROC curves (ROC-AUCs), which for a random classifier would have an expected value of 0.5, are also only marginally (though significantly, in the case of all of the LDA models) greater than 0.5 (@fig-ROC-AUCs).
+
+![Receiver operator characteristic (ROC) curves for 10-fold cross-validated predictions of diagnosis outcomes from nutrient intake predictors, separated by method of Bayes classification (naive Bayes, LDA, or QDA).](figures/bayes/bayes_classifiers_ROC_curves_comparison.png){#fig-ROCs}
+
+![Receiver operator characteristic (ROC) curves for 10-fold cross-validated LDA-classifier predictions of diagnosis outcomes from nutrient intake predictors, separated by diagnosis outcome.](figures/bayes/LDA_classifier_ROC_curves_comparison.png){#fig-ROCs-LDA}
+
+![Areas under the receiver operator characteristic curves (ROC-AUCs) for 10-fold cross-validated predictions of diagnosis outcomes from nutrient intake predictors, separated by method of Bayes classification (naive Bayes, LDA, or QDA). The expected ROC-AUC of a random (uninformed by predictors) classifier, 0.5, is given by the dashed black line.](figures/bayes/bayes_classifiers_ROC-AUC_comparison.png){#fig-ROC-AUCs}
+
+To determine if the models' poor performances were in-part due to the presence of outliers in the nutrient intake predictor variables, we removed observations from the data containing outliers (i.e., values less than their variable's 25th percentile$-1.5\mathrm{IQR}$ or greater than their variable's 75th percentile$+1.5\mathrm{IQR}$) in any of the predictors and re-trained the models with this subset of the data. This endeavor did not produce a substantial improvement in performance: while most of the models experienced a slight increase in ROC-AUC, the metric's values were still very near to 0.5 (@fig-ROC-AUCs-outliers) and the ROC curves themselves were largely unchanged in shape, besides exhibiting more variation due to the greater effect of noise on the smaller sample sizes (@fig-ROCs-outliers). 
+
+![Areas under the receiver operator characteristic curves (ROC-AUCs) for 10-fold cross-validated predictions of diagnosis outcomes from nutrient intake predictors, using data from which observations with outliers in any predictors were removed, separated by method of Bayes classification (naive Bayes, LDA, or QDA). The expected ROC-AUC of a random (uninformed by predictors) classifier, 0.5, is given by the dashed black line.](figures/bayes/bayes_classifiers_ROC-AUC_comparison_no_outliers.png){#fig-ROC-AUCs-outliers}
+
+![Receiver operator characteristic (ROC) curves for 10-fold cross-validated predictions of diagnosis outcomes from nutrient intake predictors, using data from which observations with outliers in any predictors were removed, separated by method of Bayes classification (naive Bayes, LDA, or QDA).](figures/bayes/bayes_classifiers_ROC_curves_comparison_no_outliers.png){#fig-ROCs-outliers}
+
+
+Overall, then, we can reasonably conclude that these Bayes classifier models are incapable of reliably predicting diagnoses of any condition from nutrient intake in this dataset.
+
+The code for creating the above plots is reproduced below:
+```{r}
+#| eval: false
+#| file: 'bayes_classifiers.R'
+#| echo: !expr 207:466
+```
+
+### Trees and random forest – Romy
 
 indicate who did the work
 
@@ -268,17 +297,7 @@ indicate who did the work
 
 ```
 
-### Results 2
-
-indicate who did the work
-
-```{r}
-
-```
-
-### Results 3
-
-Alissa
+### Neural network – Alissa
 
 ```{python}
 #| eval: false
