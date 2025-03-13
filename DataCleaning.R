@@ -1,30 +1,25 @@
----
-title: "Datacleaning Pipeline"
-output: html_document
-date: "2025-02-09"
----
+# DataCleaning.R
 
-```{r}
+# Setup ####
+
 library(haven)
 library(dplyr)
 library(stringr)
 library(sjlabelled)
 library(tidyr)
+library(janitor)
 
-```
+overwriteXPT <- F # change to TRUE to overwrite existing merged data file
 
+# Loading data ####
 
-
-```{r}
-#Loading in the data
 Nutrition_D1 <- read_xpt('https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2021/DataFiles/DR1TOT_L.xpt') 
 Nutrition_D2 <- read_xpt('https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2021/DataFiles/DR2TOT_L.xpt')
 Medical_Conditions <- read_xpt('https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2021/DataFiles/MCQ_L.xpt')
 
-```
 
+# Cleaning and merging ####
 
-```{r}
 #Keeping SEQN and columns Energy - Caffeine
 Filtered_Nutrition_D1 <- Nutrition_D1 %>% select(SEQN, 33:75)
 Filtered_Nutrition_D2 <- Nutrition_D2 %>% select(SEQN, 16:58)
@@ -45,11 +40,6 @@ Filtered_Nutrition_Avg <- Filtered_Nutrition_D1 %>%
 Filtered_Nutrition_Avg_Cleaned <- na.omit(Filtered_Nutrition_Avg)
 na_rows_removed <- nrow(Filtered_Nutrition_Avg) - nrow(Filtered_Nutrition_Avg_Cleaned)
 
-# Print the number of NA values removed
-print(paste("Number of rows with NA values removed:", na_rows_removed))
-```
-
-```{r}
 #Select the columns we want and rename them
 Filtered_Medical_Conditions <- Medical_Conditions %>%
   select(
@@ -68,21 +58,15 @@ Filtered_Medical_Conditions <- Medical_Conditions %>%
 
 # Replace all NA values with 0 in both datasets
 Filtered_Medical_Conditions[is.na(Filtered_Medical_Conditions)] <- 0
-```
-
-```{r}
 
 # Merge both datasets by SEQN, keeping only matching samples
 Merged_Data <- inner_join(Filtered_Nutrition_Avg_Cleaned, Filtered_Medical_Conditions, by = "SEQN")
 
-# View the first few rows of the merged dataset
-head(Merged_Data)
-dim(Merged_Data)
-```
-```{r}
-library(janitor)
-write_xpt(clean_names(Merged_Data,replace=c(unsaturated='unsat')) # write to XPT (have to remove spaces in names and shorten a couple first)
+
+# Write to file ####
+
+# write to XPT (have to remove spaces in names and shorten a couple first)
+if (overwriteXPT){
+write_xpt(clean_names(Merged_Data,replace=c(unsaturated='unsat'))
           ,path='Merged_Data.xpt')
-```
-
-
+}
