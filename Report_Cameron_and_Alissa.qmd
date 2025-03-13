@@ -1,6 +1,7 @@
 ---
 title: "Final Project for BIOS 26211"
-author: "Your Name"
+author: "Alissa Domenig, Romy Li, and Cameron Lozano"
+number-sections: true
 format: 
   html:
     self-contained: true
@@ -21,24 +22,34 @@ library(reticulate)
 
 ## Background
 
-Summarize the system and the problem you are studying. Provide references that you learned from. Explain the main questions.
+(Written by Alissa.)
 
-indicate who wrote the part
+The aim of our project was to explore the relationship between nutrition and disease to better understand how dietary factors influence health outcomes. By examining whether nutritional data can be used to predict disease status, we wanted to identify potential applications for improving public health and developing preventative strategies. To achieve this, we compared the performance of various classification models in predicting health conditions based on dietary intake data.
+
+More specifically, we used data to answer these two questions: 
+
+1. Can we reliably predict diagnosis of the outcome conditions from mean daily nutrient intake?
+2. Which classification models predict with the best performance?
+
+We used a Naïve Bayes classifier, a Tree and Random Tree model, and then finally, a Neural Network model to answer these questions.
 
 ## The Data
 
-Describe the data set you are using, including how it was measured. Describe all the variables and the challenges in their collection, e.g. were any observations not available or unreliable. Load the data set in the chunk(s) below and print out a few rows (e.g. using `glimpse`).
+(Written by Alissa and Cameron.)
+
+The data used for this project (National Center for Health Statistics, 2021-2023) is from the National Health and Nutrition Examination Survey (NHANES), which is a long-running program conducted by the CDC. NHANES is designed to assess the health and nutritional status of adults and children in the United States. This survey has been conducted in various forms since the early 1960s and is now an ongoing program with continuous data collection, but we decided to just take the dataset from 2021-2023.
+
+Participants are selected using a complex probability sampling method to ensure that the results are representative of the U.S. population. NHANES has five different sections in total: demographic data, dietary data, examination data, laboratory data, and questionnairee data. For our project, we only used the dietary data and the “Medical Conditions” subset of the questionnaire data. The dietary data consists of records of every food and liquid consumed by each participant over the course of two discrete days as well as each participant’s total intake of food energy (in kcal) and 42 nutrients (in grams, milligrams, or micrograms) as calculated from the consumption records using USDA's Food and Nutrient Database for Dietary Studies August 2021-August 2023 (FNDDS 2021- 2023). The medical conditions questionnaire data consists of a list of participant responses (“Yes”, “No”, “Refused”, “Don’t know”, or “Missing) to questions asked by trained interviewers regarding the participants’ histories of being diagnosed with a variety of conditions (such as asthma, heart attacks, and cancer). For example, one feature of the data consists of participant responses to the question, “Has a doctor or other health professional ever told you that you have asthma?” These two datasets are loaded below, and a sample glimpse of each dataset are provided in @lst-glimpse-1 and @lst-glimpse-2 respectively (located in the Appendix, @sec-appendix, in the interest of saving space).
 
 ```{r}
 Nutrition_D1 <- read_xpt('https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2021/DataFiles/DR1TOT_L.xpt') 
 Nutrition_D2 <- read_xpt('https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2021/DataFiles/DR2TOT_L.xpt')
 Medical_Conditions <- read_xpt('https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2021/DataFiles/MCQ_L.xpt')
-
-head(Nutrition_D1)
-head(Medical_Conditions)
 ```
 
-Include your pipeline for cleaning and processing the data below, including removal of NAs or outliers, selecting variables, or calculating new ones:
+We chose the eight most frequently occurring conditions as our response variables: asthma, hay fever, arthritis, congestive heart failure, coronary heart disease, heart attacks, thyroid problems, and cancer. For our predictor variables, we kept all the variables that summarized the total dietary intake of the individuals within one day, which encompasses broad categories like total fats, carbohydrates, and fiber, as well as more specific nutrients such as vitamin B-12, caffeine, and magnesium.
+
+To clean the data, we selected all the relevant columns from the dietary data and the questionnaire data, removed all the NA values, and then used the participant sequence number to match the people across the datasets. For some of our models, it was more convenient use separate subsets of the data, each containing all observations of the predictor variables and one of the outcome variables, than to use the whole data containing every outcome variable, so we split the data accordingly and packaged the subsets (each corresponding to one outcome variable) into a list. The code for performing these transformations is reproduced below:
 
 ```{r}
 #| eval: false
@@ -46,21 +57,42 @@ Include your pipeline for cleaning and processing the data below, including remo
 ```
 
 ```{r}
-#| eval: false
+#| eval: true
+#| warning: false
 #| file: 'DataSplit.R'
 ```
 
-indicate who did the work: Alissa and Cameron
-
 ## Methods
 
-Describe the questions you posed and the methods used to address them. State the assumptions underlying the methods (e.g. explanatory variable is categorical, and predictors are independent) and demonstrate or discuss whether they are satisfied by your data. Provide at least one summary table or visualization of the relevant variables of your data.
+(Written by Cameron.)
+
+To assess whether the binary NHANES condition diagnosis outcomes could be predicted from the numerical 2-day average nutrient intakes, we utilized three types of models: Bayes classifiers, decision tree and random forest, and neural network. Each of these model types was trained to predict, separately, each of the 8 diagnosis outcomes from all 43 of the energy/nutrient intake predictors. In order to train the model only using the "Yes" and "No" outcome values (i.e., not the "Refused to answer", "Don't know", etc. answers), we filtered the data to contain only observations with these values *after* first splitting the data into separate subsets for each outcome variable. Because of this, each data subset used to train the models had a different number of remaining observations, though all subsets had more than 4000 observations. The distribution of values for each outcome variable after this filtering are provided in @tbl-summary.
+
+```{r}
+#| echo: false
+#| label: tbl-summary
+summ <- list()
+for (i in 1:length(nutrFilt)){
+  summ[[i]] <- nutrFilt[[i]] |> 
+    select(contains(names(nutrFilt)[i])) |> 
+    summarise(Yes=sum(.data[[names(nutrFilt)[i]]]=="Yes"),
+              No=sum(.data[[names(nutrFilt)[i]]]=="No"),
+              Total=n()) |> 
+    mutate(Condition=names(nutrFilt)[i],.before=1)
+}
+
+summ <- bind_rows(summ)
+
+knitr::kable(summ,
+             caption="Description of outcome values. Each row represents one filtered data subset used to train models to predict one condition diagnosis. The outcome condition name, the total number of \"Yes\" (Diagnosed) responses, the total number of \"No\" (Not Diagnosed) responses, and the sum of total responses after filtering are provided.")
+```
 
 ### Bayes classifiers – Cameron
 
 Three Bayes classification methods – naive Bayes, linear discriminant analysis (LDA), and quadratic discriminant analysis (QDA) were used to train a model to predict the diagnosis outcomes ("Yes/Diagnosed" or "No/Not Diagnosed") for each condition (separately) from the set of 43 nutrient predictor variables. Prediction accuracies and receiver operator characterisitic (ROC) curves were extracted from each model trained under 10-fold cross-validation to assess performance.
 
 The code for training these models is reproduced below:
+
 ```{r}
 #| eval: false
 #| file: 'bayes_classifiers.R'
@@ -68,8 +100,6 @@ The code for training these models is reproduced below:
 ```
 
 ### Trees and random forest – Romy
-
-indicate who did the work
 
 ```{r}
 
@@ -265,6 +295,7 @@ for i, response_name in enumerate(response_variable_names):
 While the naive Bayes and QDA models predicted most of the outcome diagnoses with poor mean cross-validated accuracies (with the only models producing accuracies over 75% being the naive Bayes models for predicting asthma, congestive heart failure, and heart attack diagnoses), the LDA classification models predicted with consistently greater accuracy: all diagnosis outcomes except for arthritis were predicted with mean accuracies over 75% (@fig-accuracies). Initially, we considered this to suggest the LDA models were performing somewhat well.
 
 ![Mean 10-fold cross-validated accuracies for predicting each of the 8 diagnosis outcomes from the 43 nutrient intake predictors, separated by method of Bayes classification (naive Bayes, LDA, or QDA).](figures/bayes/bayes_classifiers_accuracy_comparison.png){#fig-accuracies}
+
 Unfortunately, further investigation revealed that all of the models, including the LDAs, were in fact performing only slightly better than would a random classifier predicting solely on the basis of outcome value distribution (i.e., a classifier which, for a diagnosis outcome consisting of 95% "No/Not Diagnosed" values and only 5% "Yes/Diagnosed" values, simply classifies a random 95% of the observations as "No" without regard to predictor values). The expected receiver operator characteristic (ROC) curve for such a random classifier would be linear with a y-intercept of 0 and a slope of 1, and the ROC curves for our models are only marginally different from this (@fig-ROCs; with separated ROCs for the LDA models given in @fig-ROCs-LDA). The areas under the ROC curves (ROC-AUCs), which for a random classifier would have an expected value of 0.5, are also only marginally (though significantly, in the case of all of the LDA models) greater than 0.5 (@fig-ROC-AUCs).
 
 ![Receiver operator characteristic (ROC) curves for 10-fold cross-validated predictions of diagnosis outcomes from nutrient intake predictors, separated by method of Bayes classification (naive Bayes, LDA, or QDA).](figures/bayes/bayes_classifiers_ROC_curves_comparison.png){#fig-ROCs}
@@ -381,10 +412,29 @@ plt.show()
 
 ## Conclusions
 
-indicate who wrote it
+(Written by Cameron.)
 
-Add a few paragraphs to describe what you learned and what new questions have been raised by your results.
+While we would prefer to have developed powerful models that could be reliably used to predict whether a person is likely to have a medical condition from their nutrient intakes, our models are clearly insufficient to succeed at such a task, regardless of whether we implement outlier removal, hyperparameter tuning, or undersampling to address this. There are, of course, numerous explanations for why this may be. It is possible that the relationship between nutrient intake and the condition statuses we examined is weak enough that the effects cannot be reliably determined from this dataset in which outcome values are so heavily weighted towards "No"; or that daily nutrient intake, even when averaged across two days, is subject to far too much variance for a relationship to be captured from only two days' of measurements; or that the dataset lacks some predictors which may dominate the effect of nutrient intake on these conditions. What seems much more likely, however, is the far simpler explanation: there simply isn't a strong enough relationship for reliable classification to begin with!
+
+Still, an important take-away from this project is a lesson that will be vital in any future work with prediction models: *high prediction accuracy does not always suggest good model performance*. In each of our models, accuracy was considerably high, a result which surprised us until we examined other performance metrics (like ROC curves and confusion matrices) that better informed us on the models' efficacies. Because no single metric can capture the comprehensive picture of a model's performance, the practice of thoroughly checking multiple metrics conveying different pieces of information is an extremely important one in the process of evaluating any predictive model. In the absence of this, one may end up singing the praises of a "99%-accurate" cancer-test which earns its metric by simply assuming cancer has been eradicated from the Earth!
+
 
 ## References
 
-Links are best, but any format is fine as long as the reference is identifiable.
+National Center for Health Statistics.  National Health and Nutrition Examination Survey, August 2021-August 2023. Public-use data file and documentation. <https://wwwn.cdc.gov/nchs/nhanes/continuousnhanes/default.aspx?Cycle=2021-2023>. 2025.
+
+## Appendix – dataset glimpses {#sec-appendix}
+
+Glimpses of the two NHANES datasets used, the dietary data and the “Medical Conditions” subset of the questionnaire data, are provided in @lst-glimpse-1 and @lst-glimpse-2 below:
+
+```{r}
+#| lst-label: lst-glimpse-1
+#| lst-cap: Sample glimpses of the Nutrition NHANES dataset
+glimpse(Nutrition_D1)
+```
+
+```{r}
+#| lst-label: lst-glimpse-2
+#| lst-cap: Sample glimpses of the Medical Conditions NHANES dataset
+glimpse(Medical_Conditions)
+```
