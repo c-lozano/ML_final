@@ -1,0 +1,86 @@
+---
+title: "Final Project for BIOS 26211"
+author: "Your Name"
+format: 
+  html:
+    self-contained: true
+editor: visual
+---
+
+```{r setup}
+#| include: false
+library(tidyverse)
+# add any other libraries you need here
+```
+
+## Background
+
+Summarize the system and the problem you are studying. Provide references that you learned from. Explain the main questions.
+
+indicate who wrote the part
+
+## The Data
+
+Describe the data set you are using, including how it was measured. Describe all the variables and the challenges in their collection, e.g. were any observations not available or unreliable. Load the data set in the chunk(s) below and print out a few rows (e.g. using `glimpse`).
+
+```{r}
+
+```
+
+Include your pipeline for cleaning and processing the data below, including removal of NAs or outliers, selecting variables, or calculating new ones:
+
+```{r}
+
+```
+
+indicate who did the work
+
+## Methods
+
+Describe the questions you posed and the methods used to address them. State the assumptions underlying the methods (e.g. explanatory variable is categorical, and predictors are independent) and demonstrate or discuss whether they are satisfied by your data. Provide at least one summary table or visualization of the relevant variables of your data.
+
+### Method 1
+
+indicate who did the work
+
+```{r}
+
+```
+
+### Methods 2
+
+indicate who did the work
+
+```{r}
+
+```
+
+## Results
+
+Produce figures or tables using the methods above to answer the questions you posed. For example, for a predictive model, provide cross-validation metrics and a plot of the predictions vs true values.
+
+### Results 1
+
+indicate who did the work
+
+```{r}
+
+```
+
+### Results 2
+
+indicate who did the work
+
+```{r}
+
+```
+
+## Conclusions
+
+indicate who wrote it
+
+Add a few paragraphs to describe what you learned and what new questions have been raised by your results.
+
+## References
+
+Links are best, but any format is fine as long as the reference is identifiable.
